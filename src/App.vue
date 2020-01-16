@@ -2,16 +2,19 @@
   <div id="app">
     <img alt="Vue logo" src="./assets/logo.png">
     <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
+    <DerivedTree></DerivedTree>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 import HelloWorld from './components/HelloWorld.vue';
+import DerivedTree from './components/DerivedTree.vue'
 
 @Component({
   components: {
     HelloWorld,
+    DerivedTree
   },
 })
 export default class App extends Vue {}
