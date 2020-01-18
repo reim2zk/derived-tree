@@ -42,7 +42,7 @@ export class TextRule implements Rule {
         }
     }
     setRelation(relation: Relation): void { this.relation = relation }
-    setParentRule(idx: number, id: Id): void { this.parentIds[idx] = id }
+    setParentRule(idx: number, id: Id): void { this.parentIds[idx] = id }    
 }
 
 export class EIfTrue implements Rule {
