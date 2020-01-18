@@ -1,9 +1,24 @@
 <template>
   <svg>
-    <text v-for="view in views" :key="view.id.value" 
-      :x="view.x1()+'rem'" :y="view.y+'rem'">
-      {{ `${view.id.value} ${getView(view.id).name}` }}
-    </text>
+    <svg v-for="item of items" :key="item.id.value">
+      <line 
+        :x1="item.view.x1()+'rem'" 
+        :x2="item.view.x2()+'rem'"
+        :y1="item.view.y+'rem'"
+        :y2="item.view.y+'rem'"
+        stroke="black">
+      </line>
+      <text 
+        :x="item.view.x2()+'rem'" 
+        :y="item.view.y+'rem'">
+        {{ item.rule.name }}
+      </text>
+      <text 
+        :x="item.view.x+'rem'" 
+        :y="item.view.y+1+'rem'">
+        {{ item.rule.relation }}
+      </text>
+    </svg>
   </svg>
 </template>
 
@@ -38,6 +53,11 @@ class RuleView {
     return `id: ${this.id.value}, {x: ${this.x}, y: ${this.y}, w: ${this.width}}`
   }
 }
+interface Item {
+  id: ruleModel.Id
+  rule: ruleModel.Rule
+  view: RuleView
+}
 
 @Component({
   components: {
@@ -47,17 +67,16 @@ class RuleView {
 export default class DerivedTree extends Vue {
   heightRem: number = 15
   widthRem: number = 20
-  items: ruleModel.Rule[] = []
+  items: Item[] = []
   topItemId: ruleModel.Id | null = null
-  views: RuleView[] = []
 
   getRule(id: ruleModel.Id): ruleModel.Rule {
-    return this.items.find(v => v.id == id)!
+    return this.items.find(v => v.id == id)!.rule
   }
   getView(id: ruleModel.Id): RuleView {
-    return this.views.find(v => v.id.value == id.value)!
+    return this.items.find(v => v.id.value == id.value)!.view
   }
-  buildItems() {
+  buildRules() {
     console.log('refresh item')
 
     const idGen = new ruleModel.IdGenerator()
@@ -73,8 +92,8 @@ export default class DerivedTree extends Vue {
     rule3.setParentRule(0, rule2.id)
     rule3.setRelation(new relation.TextRelation('bbb'))
 
-    const items = [rule1, rule2, rule3]
-    return items
+    const rules = [rule1, rule2, rule3]
+    return rules
   }
   refreshRuleView(id: ruleModel.Id): void {
     console.log('refresh view', id.value)
@@ -115,9 +134,6 @@ export default class DerivedTree extends Vue {
 
     const topItem = this.getRule(this.topItemId)
 
-    const views = this.items.map( v => RuleView.empty(v.id) )
-    this.views.splice(0, this.views.length, ...views)
-
     const topView = this.getView(this.topItemId)
     topView.x = 5
     topView.y = 5
@@ -128,13 +144,21 @@ export default class DerivedTree extends Vue {
     console.log("refresh")
     // this.refreshItems()
     this.refreshViews()
-    console.log(this.views.map(v => v.toString()))
-    console.log(this.items.map(v => v.parentIds.map(u => `${v.id.value}, ${u!.value}`)))
   }
 
   created() {
-    const items = this.buildItems()
+    const rules = this.buildRules()
+    const items: Item[] = rules.map(v => {
+      const item: Item = {
+        id: v.id,
+        rule: v,
+        view: RuleView.empty(v.id)
+      }
+      return item
+    })
+
     this.items.splice(0, this.items.length, ...items)
+    console.log('this.items.length', this.items.length)
     this.topItemId = this.items[2].id
     this.refresh()
   }
