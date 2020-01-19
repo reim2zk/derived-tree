@@ -1,5 +1,5 @@
 <template>
-  <svg>
+  <svg :width="width + 'rem'" :height="height + 'rem'" style="font-size: 20px">
     <svg v-for="item of items" :key="item.id.value">
       <line 
         :x1="item.view.x1()+'rem'" 
@@ -10,12 +10,15 @@
       </line>
       <text 
         :x="item.view.x2()+'rem'" 
-        :y="item.view.y+'rem'">
+        :y="item.view.y+'rem'"
+        dominant-baseline="central">
         {{ item.rule.name }}
       </text>
       <text 
         :x="item.view.x+'rem'" 
-        :y="item.view.y+1+'rem'">
+        :y="item.view.y+'rem'"
+        text-anchor="middle"
+        dominant-baseline="hanging">
         {{ item.rule.relation }}
       </text>
     </svg>
@@ -65,8 +68,8 @@ interface Item {
   },
 })
 export default class DerivedTree extends Vue {
-  heightRem: number = 15
-  widthRem: number = 20
+  height: number = 20
+  width: number = 50
   items: Item[] = []
   topItemId: ruleModel.Id | null = null
 
@@ -81,18 +84,22 @@ export default class DerivedTree extends Vue {
 
     const idGen = new ruleModel.IdGenerator()
 
-    const rule1 = new ruleModel.TextRule(idGen.newId(), 'EIfTrue', 0)
-    rule1.setRelation(new relation.TextRelation('If true then false false'))
+    const rule11 = new ruleModel.TextRule(idGen.newId(), 'EIfTrue', 0)
+    rule11.setRelation(new relation.TextRelation('If true then false false'))
 
-    const rule2 = new ruleModel.TextRule(idGen.newId(), 'EIf', 1)
-    rule2.setParentRule(0, rule1.id)
+    const rule12 = new ruleModel.TextRule(idGen.newId(), 'RULE-1-2', 0)
+    rule12.setRelation(new relation.TextRelation('rel2'))
+
+    const rule2 = new ruleModel.TextRule(idGen.newId(), 'EIf', 2)
+    rule2.setParentRule(0, rule11.id)
+    rule2.setParentRule(1, rule12.id)
     rule2.setRelation(new relation.TextRelation('aaa'))
 
     const rule3 = new ruleModel.TextRule(idGen.newId(), 'EIf', 1)
     rule3.setParentRule(0, rule2.id)
     rule3.setRelation(new relation.TextRelation('bbb'))
 
-    const rules = [rule1, rule2, rule3]
+    const rules = [rule11, rule12, rule2, rule3]
     return rules
   }
   refreshRuleView(id: ruleModel.Id): void {
@@ -104,7 +111,7 @@ export default class DerivedTree extends Vue {
     const ws: number[] = []
     for(let parentId of rule.parentIds) {
       const parentRule = this.getRule(parentId!)
-      const w = parentRule.relation!.toString().length
+      const w = parentRule.relation!.toString().length + parentRule.name.toString().length
       ws.push(w)
     }
 
@@ -116,6 +123,7 @@ export default class DerivedTree extends Vue {
     for(let i = 0; i < rule.parentIds.length; i++) {
       const parentId = rule.parentIds[i]!
       const w = ws[i]
+      const parentRule = this.getRule(parentId)
       const parentView = this.getView(parentId)
 
       parentView.x = x1 + w / 2
@@ -135,8 +143,8 @@ export default class DerivedTree extends Vue {
     const topItem = this.getRule(this.topItemId)
 
     const topView = this.getView(this.topItemId)
-    topView.x = 5
-    topView.y = 5
+    topView.x = this.width / 2
+    topView.y = this.height - 5
     this.refreshRuleView(topView.id)
   }
 
@@ -159,8 +167,10 @@ export default class DerivedTree extends Vue {
 
     this.items.splice(0, this.items.length, ...items)
     console.log('this.items.length', this.items.length)
-    this.topItemId = this.items[2].id
+    this.topItemId = this.items[this.items.length-1].id
     this.refresh()
+
+    console.log(this.items)
   }
 }
 </script>
